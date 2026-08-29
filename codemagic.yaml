@@ -1,0 +1,44 @@
+workflows:
+  android-apk-workflow:
+    name: CR Manager - Android APK
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      vars:
+        PACKAGE_NAME: "com.crmanager.app"
+    cache:
+      cache_paths:
+        - $HOME/.gradle/caches
+        - $HOME/.pub-cache
+
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+
+      - name: Ensure Gradle wrapper exists
+        script: |
+          if [ ! -f android/gradlew ]; then
+            cd android && gradle wrapper --gradle-version 8.14.1 && cd ..
+          fi
+          chmod +x android/gradlew
+
+      - name: Flutter analyze (non-blocking)
+        script: |
+          flutter analyze || true
+
+      - name: Build Android APK (release)
+        script: |
+          flutter build apk --release
+
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
+      - build/app/outputs/**/mapping.txt
+
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com   # <-- apna email yahan daalein
+        notify:
+          success: true
+          failure: true
